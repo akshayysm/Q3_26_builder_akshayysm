@@ -1,3 +1,8 @@
+### Test Results
+
+All 8 tests passed successfully.
+
+![Test passing](./testpassing.png)
 # scripts-solana
 
 Scripts for creating SPL tokens and NFTs on Solana devnet.
