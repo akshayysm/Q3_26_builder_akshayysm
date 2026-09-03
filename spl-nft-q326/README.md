@@ -73,5 +73,36 @@ Uses **@solana/kit** and **mpl-core** via UMI. Images and metadata are stored on
 | `nft_image.ts` | `npm run nft:image` | Uploads your image to Irys, logs the image URI |
 | `nft_metadata.ts` | `npm run nft:metadata` | Builds the metadata JSON and uploads it, logs the metadata URI |
 | `nft_mint.ts` | `npm run nft:mint` | Mints the NFT on-chain using the metadata URI |
+| `nft_update.ts` | `npm run nft:update ` | Updates an existing NFT's on-chain name and URI 
 
 Run them in order. Paste the URI logged by each step into the next script before running it.
+
+---
+
+## Tests
+After running the scripts on devnet, verify everything with:
+
+| `npm test` | This runs src/tests/spl_nft_test.ts and checks:
+
+-SPL mint exists and has metadata (name, symbol)
+-Tokens were minted and transferred
+-NFT image and metadata URIs are reachable
+-NFT was minted on-chain
+-NFT name and URI were updated correctly
+-Update the mint, NFT, and recipient addresses in the test file to match your devnet results. 
+
+Project structure
+
+src/
+├── spl/
+│   ├── spl_init.ts       # Create mint
+│   ├── spl_metadata.ts   # Add token metadata
+│   ├── spl_mint.ts       # Mint tokens to your wallet
+│   └── spl_transfer.ts   # Transfer tokens
+├── nft/
+│   ├── nft_image.ts      # Upload image to Irys
+│   ├── nft_metadata.ts   # Upload metadata JSON
+│   ├── nft_mint.ts       # Mint NFT
+│   └── nft_update.ts     # Update NFT name & URI
+└── tests/
+    └── spl_nft_test.ts   # Devnet verification tests
