@@ -91,8 +91,9 @@ After running the scripts on devnet, verify everything with:
 -NFT name and URI were updated correctly
 -Update the mint, NFT, and recipient addresses in the test file to match your devnet results. 
 
-Project structure
+## Project Structure
 
+```text
 src/
 ├── spl/
 │   ├── spl_init.ts       # Create mint
@@ -106,3 +107,5 @@ src/
 │   └── nft_update.ts     # Update NFT name & URI
 └── tests/
     └── spl_nft_test.ts   # Devnet verification tests
+```
+
