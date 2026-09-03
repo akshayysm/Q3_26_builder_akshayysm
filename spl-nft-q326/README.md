@@ -86,7 +86,6 @@ After running the scripts on Devnet, verify everything with:
 ```bash
 npm test
 ```
-
 This runs `src/tests/spl_nft_test.ts` and checks:
 
 * SPL mint exists and has metadata (name and symbol)
@@ -96,6 +95,7 @@ This runs `src/tests/spl_nft_test.ts` and checks:
 * NFT name and URI were updated correctly
 
 > **Note:** Update the mint, NFT, and recipient addresses in the test file to match your Devnet results.
+
 
 ## Project Structure
 
