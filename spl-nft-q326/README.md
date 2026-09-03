@@ -80,16 +80,22 @@ Run them in order. Paste the URI logged by each step into the next script before
 ---
 
 ## Tests
-After running the scripts on devnet, verify everything with:
 
-| `npm test` | This runs src/tests/spl_nft_test.ts and checks:
+After running the scripts on Devnet, verify everything with:
 
--SPL mint exists and has metadata (name, symbol)
--Tokens were minted and transferred
--NFT image and metadata URIs are reachable
--NFT was minted on-chain
--NFT name and URI were updated correctly
--Update the mint, NFT, and recipient addresses in the test file to match your devnet results. 
+```bash
+npm test
+```
+
+This runs `src/tests/spl_nft_test.ts` and checks:
+
+* SPL mint exists and has metadata (name and symbol)
+* Tokens were minted and transferred
+* NFT image and metadata URIs are reachable
+* NFT was minted on-chain
+* NFT name and URI were updated correctly
+
+> **Note:** Update the mint, NFT, and recipient addresses in the test file to match your Devnet results.
 
 ## Project Structure
 
