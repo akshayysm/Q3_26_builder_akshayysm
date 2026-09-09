@@ -38,12 +38,17 @@ pub mod escrowq32026 {
     }
 
     #[instruction(discriminator = 1)]
-pub fn take(ctx: Context<Take>) -> Result<()> {
-    ctx.accounts.take()
-}
+    pub fn take(ctx: Context<Take>) -> Result<()> {
+        ctx.accounts.take()
+    }
 
     #[instruction(discriminator = 2)]
     pub fn refund(ctx: Context<Refund>) -> Result<()> {
         ctx.accounts.refund_and_close_vault()
+    }
+
+    #[instruction(discriminator = 3)]
+    pub fn update(ctx: Context<Update>, receive: u64) -> Result<()> {
+        ctx.accounts.update(receive)
     }
 }

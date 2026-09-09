@@ -1,10 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{
-        close_account, transfer_checked, CloseAccount, Mint, TokenAccount, TokenInterface,
-        TransferChecked,
-    },
+use anchor_spl::token_interface::{
+    close_account, transfer_checked, CloseAccount, Mint, TokenAccount, TokenInterface,
+    TransferChecked,
 };
 
 use crate::{state::Escrow, ESCROW_SEED};
@@ -14,9 +11,7 @@ pub struct Take<'info> {
     #[account(mut)]
     pub taker: Signer<'info>,
 
-    /// CHECK: The maker is stored in the escrow account and is only used
-    /// as the destination for token B and escrow close authority.
-    #[account(mut)]
+    /// CHECK: Validated by the escrow's has_one constraint.
     pub maker: UncheckedAccount<'info>,
 
     #[account(
@@ -30,7 +25,7 @@ pub struct Take<'info> {
             maker.key().as_ref(),
             escrow.seed.to_le_bytes().as_ref()
         ],
-        bump = escrow.bump
+        bump = escrow.bump,
     )]
     pub escrow: Account<'info, Escrow>,
 
@@ -40,48 +35,44 @@ pub struct Take<'info> {
 
     #[account(
         mut,
-        associated_token::mint = mint_b,
-        associated_token::authority = taker,
-        associated_token::token_program = token_program
+        token::mint = mint_b,
+        token::authority = taker,
+        token::token_program = token_program,
     )]
-    pub taker_ata_b: InterfaceAccount<'info, TokenAccount>,
+    pub taker_ata_b: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = mint_a,
-        associated_token::authority = taker,
-        associated_token::token_program = token_program
+        token::mint = mint_a,
+        token::authority = taker,
+        token::token_program = token_program,
     )]
-    pub taker_ata_a: InterfaceAccount<'info, TokenAccount>,
+    pub taker_ata_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = mint_b,
-        associated_token::authority = maker,
-        associated_token::token_program = token_program
+        token::mint = mint_b,
+        token::authority = maker,
+        token::token_program = token_program,
     )]
-    pub maker_ata_b: InterfaceAccount<'info, TokenAccount>,
+    pub maker_ata_b: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         mut,
-        associated_token::mint = mint_a,
-        associated_token::authority = escrow,
-        associated_token::token_program = token_program
+        token::mint = mint_a,
+        token::authority = escrow,
+        token::token_program = token_program,
     )]
-    pub vault: InterfaceAccount<'info, TokenAccount>,
+    pub vault: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub token_program: Interface<'info, TokenInterface>,
-
-    pub associated_token_program: Program<'info, AssociatedToken>,
-
-    pub system_program: Program<'info, System>,
 }
 
 impl<'info> Take<'info> {
     pub fn take(&mut self) -> Result<()> {
         let cpi_program = self.token_program.key();
 
-        // Taker sends token B to maker.
+        // Taker sends Token B to maker.
         let transfer_to_maker = TransferChecked {
             from: self.taker_ata_b.to_account_info(),
             mint: self.mint_b.to_account_info(),
@@ -89,7 +80,10 @@ impl<'info> Take<'info> {
             authority: self.taker.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(cpi_program, transfer_to_maker);
+        let cpi_ctx = CpiContext::new(
+            cpi_program,
+            transfer_to_maker,
+        );
 
         transfer_checked(
             cpi_ctx,
@@ -105,7 +99,7 @@ impl<'info> Take<'info> {
             &[self.escrow.bump],
         ]];
 
-        // Vault sends token A to taker.
+        // Vault sends Token A to taker.
         let transfer_to_taker = TransferChecked {
             from: self.vault.to_account_info(),
             mint: self.mint_a.to_account_info(),
@@ -125,7 +119,7 @@ impl<'info> Take<'info> {
             self.mint_a.decimals,
         )?;
 
-        // Close the vault and return its rent to the taker.
+        // Close the vault.
         let close_vault = CloseAccount {
             account: self.vault.to_account_info(),
             destination: self.taker.to_account_info(),
