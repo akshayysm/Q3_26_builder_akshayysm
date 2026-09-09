@@ -1,4 +1,4 @@
-# Escrow Q3 2026
+# Escrow 
 ![test passing screenshot](./testpassing.png)
 
 A Solana escrow program built with Anchor.
