@@ -14,6 +14,23 @@ The program implements four instructions:
 - `refund` — Maker reclaims Token A and closes the escrow and vault.
 - `update` — Maker updates the amount of Token B they want to receive.
 
+## Project structure
+
+```text
+programs/escrowq32026/
+├── src/
+│   ├── lib.rs                 # Program entry (make, take, refund, update)
+│   ├── state.rs               # Escrow account
+│   ├── constants.rs           # PDA seed
+│   ├── error.rs               # Errors
+│   └── instructions/
+│       ├── make.rs
+│       ├── take.rs
+│       ├── refund.rs
+│       └── update.rs
+└── tests/
+    └── mod.rs                 # LiteSVM tests
+```
 ## Tests
 
 Tests are written in Rust using LiteSVM.
