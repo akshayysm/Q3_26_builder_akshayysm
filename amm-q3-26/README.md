@@ -1,28 +1,37 @@
-# AMM — Solana-Anchor
+# AMM — Solana Anchor
 
-A simple two-token Automated Market Maker (AMM) built on Solana using the Anchor framework and a constant-product curve library.
+A simple two-token **Automated Market Maker (AMM)** built on Solana using the **Anchor framework** and a constant-product curve library.
 
-This project implements the required AMM functionality:
+This project implements the core functionality of a two-token AMM:
 
-- Pool initialization
-- Liquidity deposits
-- Liquidity withdrawals
-- Token swaps
-- Protocol fees
-- Treasury accounts
-- Tests covering all four instructions
+* Pool initialization
+* Liquidity deposits
+* Liquidity withdrawals
+* Token swaps
+* Protocol fees
+* Treasury accounts
+* Tests covering all four instructions
 
-# Overview
+---
 
-An Automated Market Maker allows users to trade tokens against liquidity held inside a pool without requiring a traditional order book.
+## Overview
 
-This AMM contains two tokens:
+An **Automated Market Maker (AMM)** allows users to trade tokens against liquidity held inside a pool without requiring a traditional order book.
+
+This AMM operates with two tokens:
 
 ```text
 Token X
 Token Y
+```
 
-# Project Structure
+Liquidity providers deposit both tokens into the pool and receive **LP tokens** representing their share of the pool.
+
+Users can then swap between Token X and Token Y using the pool's liquidity.
+
+---
+
+## Project Structure
 
 ```text
 amm-q3-26/
@@ -39,45 +48,192 @@ amm-q3-26/
 │           ├── constants.rs
 │           ├── error.rs
 │           └── lib.rs
+│
 ├── tests/
 │   └── amm-q3-26.ts
+│
 ├── Anchor.toml
 ├── Cargo.toml
 └── package.json
+```
 
-# AMM Flow
+### Instructions
 
+| Instruction  | Description                                                         |
+| ------------ | ------------------------------------------------------------------- |
+| `initialise` | Creates and configures the AMM pool                                 |
+| `deposit`    | Adds Token X and Token Y liquidity and mints LP tokens              |
+| `withdraw`   | Burns LP tokens and returns the user's share of Token X and Token Y |
+| `swap`       | Swaps one token for the other using the AMM curve                   |
+
+---
+
+## AMM Flow
+
+The basic lifecycle of the AMM is:
+
+```text
 Initialize
     ↓
 Create Pool
     ↓
-Deposit X + Y
+Deposit Token X + Token Y
     ↓
 Receive LP Tokens
     ↓
-Swap X ↔ Y
+Swap Token X ↔ Token Y
     ↓
 Protocol Fee → Treasury
     ↓
-Withdraw
+Withdraw Liquidity
     ↓
 Burn LP Tokens
     ↓
-Receive X + Y
+Receive Token X + Token Y
+```
 
-# Testing
+---
 
-The project uses TypeScript - Anchor - Mocha for its tests. You can aslo use liteSVM but i have not used it here to keep it simple and direct
+## Pool Components
 
-The tests are located at:
-tests/amm-q3-26.ts
+When the pool is initialized, the AMM creates the accounts required to manage liquidity:
 
-Run all tests with:
-anchor test
+```text
+                    AMM POOL
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+          ▼            ▼            ▼
+       Vault X      Vault Y       LP Mint
+          │            │            │
+          │            │            ▼
+          │            │       LP Tokens
+          │            │
+          └──────┬─────┘
+                 │
+                 ▼
+             Liquidity
+```
 
-# Complete AMM Lifecycle
+### Vault X
 
+Holds Token X deposited by liquidity providers.
 
+### Vault Y
+
+Holds Token Y deposited by liquidity providers.
+
+### LP Mint
+
+Used to mint LP tokens representing a user's share of the pool.
+
+---
+
+## Liquidity Deposit
+
+A liquidity provider deposits both Token X and Token Y into the pool.
+
+```text
+User
+ │
+ ├── Token X ──────► Vault X
+ │
+ └── Token Y ──────► Vault Y
+                       │
+                       ▼
+                  LP Tokens
+                       │
+                       ▼
+                      User
+```
+
+The user receives LP tokens representing their proportional ownership of the pool's liquidity.
+
+---
+
+## Token Swap
+
+Users can swap between Token X and Token Y through the pool.
+
+```text
+User
+ │
+ ├── Token X ──────► Pool
+ │
+ │                  AMM Curve
+ │                     │
+ │                     ▼
+ │               Protocol Fee
+ │                     │
+ │                     ▼
+ │                 Treasury
+ │
+ └── Token Y ◄──────── Pool
+```
+
+The swap uses the AMM's constant-product curve to determine the amount of output tokens.
+
+Conceptually:
+
+```text
+X × Y = K
+```
+
+where:
+
+* `X` = Token X reserve
+* `Y` = Token Y reserve
+* `K` = constant product
+
+---
+
+## Protocol Fees
+
+Swaps charge a protocol fee.
+
+The fee is directed to the protocol's **treasury account** rather than being distributed directly to the swapper.
+
+```text
+Swap
+  │
+  ├── Swap Amount
+  │
+  └── Protocol Fee
+          │
+          ▼
+       Treasury
+```
+
+This allows the protocol to accumulate fees generated by trading activity.
+
+---
+
+## Liquidity Withdrawal
+
+Liquidity providers can withdraw their share of the pool by burning their LP tokens.
+
+```text
+User
+ │
+ │ LP Tokens
+ ▼
+Burn LP Tokens
+ │
+ ▼
+Calculate Pool Share
+ │
+ ├──────────────► Token X
+ │
+ └──────────────► Token Y
+```
+
+The amount of Token X and Token Y returned depends on the user's share of the pool.
+
+---
+
+## Complete AMM Lifecycle
+
+```text
                          INITIALIZE
                               │
                               ▼
@@ -101,31 +257,104 @@ anchor test
                        SWAP                                  WITHDRAW
                          │                                      │
                          ▼                                      ▼
-                 Protocol fee → Treasury                 Burn LP tokens
+                 Protocol Fee → Treasury                 Burn LP tokens
                                                                 │
                                                                 ▼
                                                          Receive X + Y
+```
 
-                                
-# Summary
+---
 
-This project implements a basic two-token AMM on Solana.
-The main flow is:
+## Testing
 
+The project uses:
+
+* **TypeScript**
+* **Anchor**
+* **Mocha**
+
+The test suite is located at:
+
+```text
+tests/amm-q3-26.ts
+```
+
+The tests cover the four main AMM instructions:
+
+```text
+Initialize
+Deposit
+Swap
+Withdraw
+```
+
+### Run Tests
+
+Run the complete test suite with:
+
+```bash
+anchor test
+```
+
+> You can also use **LiteSVM** for testing Solana programs. It is not used in this project in order to keep the test setup simple and direct.
+
+---
+
+## AMM Lifecycle Summary
+
+The complete flow can be summarized as:
+
+```text
 Initialize
     ↓
-Create pool
+Create Pool
     ↓
-Deposit liquidity
+Deposit Liquidity
     ↓
-Receive LP tokens
+Receive LP Tokens
     ↓
-Swap tokens
+Swap Token X ↔ Token Y
     ↓
-Protocol fee → Treasury
+Protocol Fee → Treasury
     ↓
-Withdraw liquidity
+Withdraw Liquidity
     ↓
-Burn LP tokens
+Burn LP Tokens
     ↓
 Receive Token X + Token Y
+```
+
+---
+
+## Summary
+
+This project implements a basic two-token AMM on Solana using Anchor.
+
+The core components are:
+
+* **Pool initialization**
+* **Token X and Token Y vaults**
+* **LP token mint**
+* **Liquidity deposits**
+* **Liquidity withdrawals**
+* **Token swaps**
+* **Protocol fee collection**
+* **Treasury accounts**
+* **TypeScript/Anchor tests**
+
+The project demonstrates the fundamental lifecycle of an AMM:
+
+```text
+Create Pool
+    ↓
+Provide Liquidity
+    ↓
+Receive LP Tokens
+    ↓
+Trade Against Pool
+    ↓
+Collect Protocol Fees
+    ↓
+Withdraw Liquidity
+```
+
