@@ -65,7 +65,7 @@ Burn LP Tokens
     ↓
 Receive X + Y
 
-##Testing
+#Testing
 
 The project uses TypeScript - Anchor - Mocha for its tests. You can aslo use liteSVM but i have not used it here to keep it simple and direct
 
@@ -75,7 +75,9 @@ tests/amm-q3-26.ts
 Run all tests with:
 anchor test
 
-##Complete AMM Lifecycle
+#Complete AMM Lifecycle
+
+
                          INITIALIZE
                               │
                               ▼
@@ -105,7 +107,7 @@ anchor test
                                                          Receive X + Y
 
                                 
-##Summary
+#Summary
 
 This project implements a basic two-token AMM on Solana.
 The main flow is:
