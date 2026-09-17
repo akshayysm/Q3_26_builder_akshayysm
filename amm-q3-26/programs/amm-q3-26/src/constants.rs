@@ -1,0 +1,1 @@
+pub const LP_DECIMALS: u8 = 6;
