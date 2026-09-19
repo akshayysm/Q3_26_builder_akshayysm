@@ -1,3 +1,5 @@
+![test passing screenshot](./testpassing.png)
+
 # AMM — Solana-Anchor
 
 A simple two-token Automated Market Maker (AMM) built on Solana using the Anchor framework and a constant-product curve library.
