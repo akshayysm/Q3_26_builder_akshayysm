@@ -6,10 +6,10 @@ All 8 tests passed successfully.
 
 # transactions 
 spl-
-![spl-transactions](./spltransactions.png)
+![spl-transactions](./spl-transactions.png)
 
 nft-
-![nft-transactions](./nfttransaction.png)
+![nft-transactions](./nft-transaction.png)
 # scripts-solana
 
 Scripts for creating SPL tokens and NFTs on Solana devnet.
