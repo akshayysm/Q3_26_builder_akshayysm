@@ -4228,7 +4228,7 @@ dependencies = [
  "solana-zero-copy",
  "solana-zk-elgamal-proof-interface",
  "solana-zk-sdk-pod",
- "spl-token-confidential-transfer-proof-extraction 0.6.1",
+ "spl-token-confidential-transfer-proof-extraction 0.6.0",
  "spl-token-group-interface",
  "spl-token-metadata-interface 1.0.1",
  "spl-type-length-value",
@@ -4257,14 +4257,14 @@ dependencies = [
 
 [[package]]
 name = "spl-token-confidential-transfer-proof-extraction"
-version = "0.6.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c1a845ec724e807643a04f1d43439ee3571dd913848112ac76aa90b850eaf7c"
+checksum = "0bd536b30c532568fad8430077875c3abc16d365e464ebfa2902bc65cb91bdc4"
 dependencies = [
  "bytemuck",
  "solana-account-info",
  "solana-address 2.6.1",
- "solana-curve25519 4.0.1",
+ "solana-curve25519 3.1.14",
  "solana-instruction",
  "solana-instructions-sysvar 3.0.1",
  "solana-msg",
@@ -4519,7 +4519,7 @@ dependencies = [
  "solana-zk-sdk 7.0.1",
  "spl-pod",
  "spl-token-2022-interface 3.1.1",
- "spl-token-confidential-transfer-proof-extraction 0.6.1",
+ "spl-token-confidential-transfer-proof-extraction 0.6.0",
  "spl-token-confidential-transfer-proof-generation 0.6.1",
  "spl-token-metadata-interface 0.8.0",
  "spl-token-metadata-interface 1.0.1",

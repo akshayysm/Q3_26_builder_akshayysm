@@ -2,7 +2,8 @@ use {
     anchor_lang::{
         prelude::Pubkey,
         solana_program::instruction::Instruction,
-        InstructionData, ToAccountMetas,
+        InstructionData,
+        ToAccountMetas,
     },
     anchor_spl::token_interface::spl_token_2022::ID as TOKEN_2022_PROGRAM_ID,
     bytemuck::Pod,
@@ -14,9 +15,13 @@ use {
     t22new::{
         extension::{
             confidential_transfer::{
-                instruction as ct_ix, ConfidentialTransferAccount, DecryptableBalance,
+                instruction as ct_ix,
+                ConfidentialTransferAccount,
+                DecryptableBalance,
             },
-            BaseStateWithExtensions, ExtensionType, StateWithExtensions,
+            BaseStateWithExtensions,
+            ExtensionType,
+            StateWithExtensions,
         },
         state::Account as TokenAccount,
     },
@@ -24,12 +29,20 @@ use {
         encryption::{
             auth_encryption::AeKey,
             derivation::derive_confidential_keys,
-            elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+            elgamal::{
+                ElGamalCiphertext,
+                ElGamalKeypair,
+                ElGamalPubkey,
+            },
         },
         zk_elgamal_proof_program::pubkey_validity::build_pubkey_validity_proof_data,
     },
     zkif::{
-        instruction::{close_context_state, ContextStateInfo, ProofInstruction},
+        instruction::{
+            close_context_state,
+            ContextStateInfo,
+            ProofInstruction,
+        },
         proof_data::ZkProofData,
         state::ProofContextState,
         ID as ZK_PROGRAM_ID,
@@ -50,14 +63,18 @@ pub fn create_and_configure(
     owner: &Keypair,
 ) -> Holder {
     let acc = Keypair::new();
-    let space = ExtensionType::try_calculate_account_len::<TokenAccount>(&[
-        ExtensionType::ImmutableOwner,
-        ExtensionType::TransferFeeAmount,
-        ExtensionType::ConfidentialTransferAccount,
-        ExtensionType::ConfidentialTransferFeeAmount,
-    ])
-    .unwrap();
+
+    let space =
+        ExtensionType::try_calculate_account_len::<TokenAccount>(&[
+            ExtensionType::ImmutableOwner,
+            ExtensionType::TransferFeeAmount,
+            ExtensionType::ConfidentialTransferAccount,
+            ExtensionType::ConfidentialTransferFeeAmount,
+        ])
+        .unwrap();
+
     let lamports = svm.minimum_balance_for_rent_exemption(space);
+
     crate::send(
         svm,
         payer,
@@ -79,6 +96,7 @@ pub fn create_and_configure(
             .unwrap(),
         ],
     );
+
     crate::send(
         svm,
         payer,
@@ -95,23 +113,29 @@ pub fn create_and_configure(
         ],
     );
 
-    let (elgamal, aes) = derive_confidential_keys(owner, b"").unwrap();
-    let proof = build_pubkey_validity_proof_data(&elgamal).unwrap();
+    let (elgamal, aes) =
+        derive_confidential_keys(owner, b"").unwrap();
+
+    let proof =
+        build_pubkey_validity_proof_data(&elgamal).unwrap();
+
     let ixs = ct_ix::configure_account(
         &TOKEN_2022_PROGRAM_ID,
         &acc.pubkey(),
         &mint.pubkey(),
         &aes.encrypt(0).into(),
-        65536,
+        65_536,
         &owner.pubkey(),
         &[],
-        proofext::instruction::ProofLocation::InstructionOffset(
+        ProofLocation::InstructionOffset(
             std::num::NonZeroI8::new(1).unwrap(),
             &proof,
         ),
     )
     .unwrap();
+
     crate::send(svm, payer, &[owner], ixs);
+
     crate::send(
         svm,
         payer,
@@ -135,36 +159,63 @@ pub fn create_and_configure(
     }
 }
 
-pub fn read_ct(svm: &LiteSVM, account: &Pubkey) -> ConfidentialTransferAccount {
+pub fn read_ct(
+    svm: &LiteSVM,
+    account: &Pubkey,
+) -> ConfidentialTransferAccount {
     let data = svm.get_account(account).unwrap().data.clone();
+
     *StateWithExtensions::<TokenAccount>::unpack(&data)
         .unwrap()
         .get_extension::<ConfidentialTransferAccount>()
         .unwrap()
 }
 
-pub fn available_balance(ct: &ConfidentialTransferAccount, elgamal: &ElGamalKeypair) -> u64 {
-    let ciphertext: ElGamalCiphertext = ct.available_balance.try_into().unwrap();
+pub fn available_balance(
+    ct: &ConfidentialTransferAccount,
+    elgamal: &ElGamalKeypair,
+) -> u64 {
+    let ciphertext: ElGamalCiphertext =
+        ct.available_balance.try_into().unwrap();
+
     elgamal.secret().decrypt_u32(&ciphertext).unwrap()
 }
 
-pub fn pending_balance(ct: &ConfidentialTransferAccount, elgamal: &ElGamalKeypair) -> u64 {
-    let lo: ElGamalCiphertext = ct.pending_balance_lo.try_into().unwrap();
-    let hi: ElGamalCiphertext = ct.pending_balance_hi.try_into().unwrap();
+pub fn pending_balance(
+    ct: &ConfidentialTransferAccount,
+    elgamal: &ElGamalKeypair,
+) -> u64 {
+    let lo: ElGamalCiphertext =
+        ct.pending_balance_lo.try_into().unwrap();
+
+    let hi: ElGamalCiphertext =
+        ct.pending_balance_hi.try_into().unwrap();
+
     let lo = elgamal.secret().decrypt_u32(&lo).unwrap();
     let hi = elgamal.secret().decrypt_u32(&hi).unwrap();
+
     lo + (hi << 16)
 }
 
-pub fn public_balance(svm: &LiteSVM, account: &Pubkey) -> u64 {
+pub fn public_balance(
+    svm: &LiteSVM,
+    account: &Pubkey,
+) -> u64 {
     let data = svm.get_account(account).unwrap().data.clone();
+
     StateWithExtensions::<TokenAccount>::unpack(&data)
         .unwrap()
         .base
         .amount
 }
 
-pub fn fund(svm: &mut LiteSVM, payer: &Keypair, mint: &Keypair, dst: &Pubkey, amount: u64) {
+pub fn fund(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    mint: &Keypair,
+    dst: &Pubkey,
+    amount: u64,
+) {
     crate::send(
         svm,
         payer,
@@ -206,6 +257,7 @@ pub fn deposit_via_program(
         }
         .data(),
     };
+
     crate::send(svm, payer, &[owner], vec![ix]);
 }
 
@@ -216,10 +268,17 @@ pub fn apply_via_program(
     owner: &Keypair,
 ) -> u64 {
     let ct = read_ct(svm, &holder.account);
-    let counter: u64 = ct.pending_balance_credit_counter.into();
+
+    let counter: u64 =
+        ct.pending_balance_credit_counter.into();
+
     let new_available =
-        available_balance(&ct, &holder.elgamal) + pending_balance(&ct, &holder.elgamal);
-    let bytes: [u8; 36] = holder.aes.encrypt(new_available).to_bytes();
+        available_balance(&ct, &holder.elgamal)
+            + pending_balance(&ct, &holder.elgamal);
+
+    let bytes: [u8; 36] =
+        holder.aes.encrypt(new_available).to_bytes();
+
     let ix = Instruction {
         program_id: t22::ID,
         accounts: t22::accounts::ApplyPendingBalance {
@@ -234,7 +293,9 @@ pub fn apply_via_program(
         }
         .data(),
     };
+
     crate::send(svm, payer, &[owner], vec![ix]);
+
     new_available
 }
 
@@ -248,22 +309,29 @@ where
     T: Pod + ZkProofData<U>,
     U: Pod,
 {
-    let len = std::mem::size_of::<ProofContextState<U>>();
+    let len =
+        std::mem::size_of::<ProofContextState<U>>();
+
     let ctx = Keypair::new();
-    let lamports = svm.minimum_balance_for_rent_exemption(len);
+
+    let lamports =
+        svm.minimum_balance_for_rent_exemption(len);
+
     crate::send(
         svm,
         payer,
         &[&ctx],
-        vec![system_ix::create_account(
-            &payer.pubkey(),
-            &ctx.pubkey(),
+        vec![
+            system_ix::create_account(
+                &payer.pubkey(),
+                &ctx.pubkey(),
                 lamports,
                 len as u64,
                 &ZK_PROGRAM_ID,
             ),
         ],
     );
+
     let ix = kind.encode_verify_proof(
         Some(ContextStateInfo {
             context_state_account: &ctx.pubkey(),
@@ -271,19 +339,27 @@ where
         }),
         proof,
     );
+
     crate::send(
         svm,
         payer,
         &[],
         vec![
-            ComputeBudgetInstruction::set_compute_unit_limit(400_000),
+            ComputeBudgetInstruction::set_compute_unit_limit(
+                400_000,
+            ),
             ix,
         ],
     );
+
     ctx.pubkey()
 }
 
-pub fn close_contexts(svm: &mut LiteSVM, payer: &Keypair, contexts: &[Pubkey]) {
+pub fn close_contexts(
+    svm: &mut LiteSVM,
+    payer: &Keypair,
+    contexts: &[Pubkey],
+) {
     let ixs: Vec<Instruction> = contexts
         .iter()
         .map(|c| {
@@ -296,6 +372,7 @@ pub fn close_contexts(svm: &mut LiteSVM, payer: &Keypair, contexts: &[Pubkey]) {
             )
         })
         .collect();
+
     crate::send(svm, payer, &[], ixs);
 }
 
@@ -310,24 +387,36 @@ pub fn confidential_transfer_with_fee(
     amount: u64,
 ) {
     let ct = read_ct(svm, &alice.account);
-    let available = available_balance(&ct, &alice.elgamal);
-    let current_available: ElGamalCiphertext = ct.available_balance.try_into().unwrap();
-    let current_decryptable = ct.decryptable_available_balance.try_into().unwrap();
-    let bob_pubkey: ElGamalPubkey = read_ct(svm, &bob.account).elgamal_pubkey.try_into().unwrap();
 
-    let proofs = proofgen::transfer_with_fee::transfer_with_fee_split_proof_data(
-        &current_available,
-        &current_decryptable,
-        amount,
-        &alice.elgamal,
-        &alice.aes,
-        &bob_pubkey,
-        None,
-        fee_authority.pubkey(),
-        t22::TRANSFER_FEE_BPS,
-        t22::MAXIMUM_FEE,
-    )
-    .unwrap();
+    let available =
+        available_balance(&ct, &alice.elgamal);
+
+    let current_available: ElGamalCiphertext =
+        ct.available_balance.try_into().unwrap();
+
+    let current_decryptable =
+        ct.decryptable_available_balance.try_into().unwrap();
+
+    let bob_pubkey: ElGamalPubkey =
+        read_ct(svm, &bob.account)
+            .elgamal_pubkey
+            .try_into()
+            .unwrap();
+
+    let proofs =
+        proofgen::transfer_with_fee::transfer_with_fee_split_proof_data(
+            &current_available,
+            &current_decryptable,
+            amount,
+            &alice.elgamal,
+            &alice.aes,
+            &bob_pubkey,
+            None,
+            fee_authority.pubkey(),
+            t22::TRANSFER_FEE_BPS,
+            t22::MAXIMUM_FEE,
+        )
+        .unwrap();
 
     let eq_ctx = stage_proof(
         svm,
@@ -335,6 +424,7 @@ pub fn confidential_transfer_with_fee(
         ProofInstruction::VerifyCiphertextCommitmentEquality,
         &proofs.equality_proof_data,
     );
+
     let val_ctx = stage_proof(
         svm,
         payer,
@@ -343,18 +433,21 @@ pub fn confidential_transfer_with_fee(
             .transfer_amount_ciphertext_validity_proof_data_with_ciphertext
             .proof_data,
     );
+
     let pct_ctx = stage_proof(
         svm,
         payer,
         ProofInstruction::VerifyPercentageWithCap,
         &proofs.percentage_with_cap_proof_data,
     );
+
     let fee_val_ctx = stage_proof(
         svm,
         payer,
         ProofInstruction::VerifyBatchedGroupedCiphertext2HandlesValidity,
         &proofs.fee_ciphertext_validity_proof_data,
     );
+
     let range_ctx = stage_proof(
         svm,
         payer,
@@ -362,7 +455,9 @@ pub fn confidential_transfer_with_fee(
         &proofs.range_proof_data,
     );
 
-    let new_decryptable: DecryptableBalance = alice.aes.encrypt(available - amount).into();
+    let new_decryptable: DecryptableBalance =
+        alice.aes.encrypt(available - amount).into();
+
     let ixs = ct_ix::transfer_with_fee(
         &TOKEN_2022_PROGRAM_ID,
         &alice.account,
@@ -384,11 +479,24 @@ pub fn confidential_transfer_with_fee(
         ProofLocation::ContextStateAccount(&range_ctx),
     )
     .unwrap();
-    crate::send(svm, payer, &[alice_owner], ixs);
+
+    crate::send(
+        svm,
+        payer,
+        &[alice_owner],
+        ixs,
+    );
+
     close_contexts(
         svm,
         payer,
-        &[eq_ctx, val_ctx, pct_ctx, fee_val_ctx, range_ctx],
+        &[
+            eq_ctx,
+            val_ctx,
+            pct_ctx,
+            fee_val_ctx,
+            range_ctx,
+        ],
     );
 }
 
@@ -401,12 +509,21 @@ pub fn confidential_withdraw(
     amount: u64,
 ) {
     let ct = read_ct(svm, &holder.account);
-    let available = available_balance(&ct, &holder.elgamal);
-    let current: ElGamalCiphertext = ct.available_balance.try_into().unwrap();
+
+    let available =
+        available_balance(&ct, &holder.elgamal);
+
+    let current: ElGamalCiphertext =
+        ct.available_balance.try_into().unwrap();
 
     let proofs =
-        proofgen::withdraw::withdraw_proof_data(&current, available, amount, &holder.elgamal)
-            .unwrap();
+        proofgen::withdraw::withdraw_proof_data(
+            &current,
+            available,
+            amount,
+            &holder.elgamal,
+        )
+        .unwrap();
 
     let eq_ctx = stage_proof(
         svm,
@@ -414,6 +531,7 @@ pub fn confidential_withdraw(
         ProofInstruction::VerifyCiphertextCommitmentEquality,
         &proofs.equality_proof_data,
     );
+
     let range_ctx = stage_proof(
         svm,
         payer,
@@ -421,7 +539,9 @@ pub fn confidential_withdraw(
         &proofs.range_proof_data,
     );
 
-    let new_decryptable: DecryptableBalance = holder.aes.encrypt(available - amount).into();
+    let new_decryptable: DecryptableBalance =
+        holder.aes.encrypt(available - amount).into();
+
     let ixs = ct_ix::withdraw(
         &TOKEN_2022_PROGRAM_ID,
         &holder.account,
@@ -435,6 +555,17 @@ pub fn confidential_withdraw(
         ProofLocation::ContextStateAccount(&range_ctx),
     )
     .unwrap();
-    crate::send(svm, payer, &[owner], ixs);
-    close_contexts(svm, payer, &[eq_ctx, range_ctx]);
+
+    crate::send(
+        svm,
+        payer,
+        &[owner],
+        ixs,
+    );
+
+    close_contexts(
+        svm,
+        payer,
+        &[eq_ctx, range_ctx],
+    );
 }
