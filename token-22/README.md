@@ -164,7 +164,7 @@ token-22/
     │       ├── apply.rs 
     │       ├── confidential_mint.rs 
     │       ├── deposit.rs 
-    │       ├── increment.rs confidential_mint.rs
+    │       ├── increment.rs 
     │       ├── initialize.rs
     │       ├── transfer.rs
     │       └── unfreeze.rs
