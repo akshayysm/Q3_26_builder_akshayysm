@@ -1,4 +1,4 @@
-![Project Screenshot](testpassing.png)
+
 # NFT Staking Core
 
 A Solana Anchor program implementing an NFT staking system using Metaplex Core.
